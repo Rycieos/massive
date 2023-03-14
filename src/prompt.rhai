@@ -1,0 +1,5 @@
+fn generate_prompt() {
+    let prompt = get_hostname();
+
+    prompt
+}
