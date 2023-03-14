@@ -1,65 +1,45 @@
-use rustpython_vm as vm;
-use vm::builtins::PyStrRef;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Context, Diagnostics, FromValue, Hash, Source, Sources, Vm};
+use std::path::Path;
+use std::sync::Arc;
 
-pub(crate) use data_module::make_module;
-
-fn main() {
-    vm::Interpreter::with_init(Default::default(), |vm| {
-        vm.add_native_module("data".to_owned(), Box::new(make_module));
-    })
-    .enter(run);
+async fn get_hostname() -> String {
+    "jaguar".into()
 }
 
-fn run(vm: &vm::VirtualMachine) {
-    match exec_module(vm, "prompt") {
-        Ok(prompt) => println!("prompt: '{prompt}'"),
-        Err(exc) => vm.print_exception(exc),
-    };
-}
+#[tokio::main]
+async fn main() -> rune::Result<()> {
+    let rune_entrypoint = Hash::type_hash(["generate_prompt"]);
 
-fn exec_module(vm: &vm::VirtualMachine, module: &str) -> vm::PyResult<PyStrRef> {
-    vm.insert_sys_path(vm.new_pyobj("src")).expect("add path");
-    let module = vm.import(module, None, 0)?;
-    let name_func = module.get_attr("generate_prompt", vm)?;
-    let data = data_module::Data { hostname: "jaguar" };
-    let result = vm.invoke(&name_func, (data,))?;
-    let result: PyStrRef = result.try_into_value(vm)?;
+    let mut context = Context::with_default_modules()?;
 
-    vm::PyResult::Ok(result)
-}
+    let mut module = rune::Module::default();
+    module.async_function(&["get_hostname"], get_hostname)?;
+    context.install(&module)?;
 
-#[vm::pymodule]
-mod data_module {
-    use indexmap::IndexMap;
-    use rustpython_vm::convert::ToPyObject;
-    use rustpython_vm::{
-        function::{FuncArgs, IntoFuncArgs},
-        pyclass, PyResult, VirtualMachine,
-    };
+    let runtime = Arc::new(context.runtime());
 
-    #[pyattr]
-    #[pyclass(module = "data_module", name = "Data")]
-    pub struct Data {
-        hostname: &str,
+    let mut sources = Sources::new();
+    sources.insert(Source::from_path(Path::new("src/prompt.rn"))?);
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&mut sources)
+        .with_context(&context)
+        .with_diagnostics(&mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&mut writer, &sources)?;
     }
 
-    #[pyclass]
-    impl Data {
-        #[pymethod]
-        fn hostname(&self) -> PyResult<&str> {
-            Ok(self.hostname)
-        }
-    }
+    let unit = result?;
+    let mut vm = Vm::new(runtime, Arc::new(unit));
 
-    impl IntoFuncArgs for Data {
-        fn into_args(self, vm: &VirtualMachine) -> FuncArgs {
-            let mut data = IndexMap::new();
-            data.insert("hostname", self.hostname.to_pyobject(vm));
-            let args = vec![data.to_pyobject()];
-            FuncArgs {
-                args: args,
-                kwargs: IndexMap::new(),
-            }
-        }
-    }
+    let output = vm.async_call(rune_entrypoint, ()).await?;
+    let output = String::from_value(output)?;
+
+    println!("{}", output);
+    Ok(())
 }

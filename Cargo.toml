@@ -3,10 +3,9 @@ name = "massive"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies.rune]
+version = "0.12.1"
 
-[dependencies.rustpython-vm]
-git = "https://github.com/RustPython/RustPython"
-tag = "v0.2.0"
-version = "0.2.0"
-features = ["compiler", "threading", "importlib"]
+[dependencies.tokio]
+version = "^1"
+features = ["rt-multi-thread", "fs", "macros", "io-util", "signal", "sync", "time"]
