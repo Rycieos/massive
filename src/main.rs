@@ -3,8 +3,24 @@ use rune::{Context, Diagnostics, FromValue, Hash, Source, Sources, Vm};
 use std::path::Path;
 use std::sync::Arc;
 
-async fn get_hostname() -> String {
-    "jaguar".into()
+mod data;
+
+macro_rules! load_rune_async_function {
+    ($module:expr, $name:expr, $func:expr) => {{
+        match $module.async_function(&[$name], $func) {
+            Ok(()) => (),
+            // TODO: panic if allowed.
+            Err(_) => log::warn!("Failed to intitalize API function '{}'.", $name),
+        }
+    }};
+}
+
+fn generate_module() -> rune::Module {
+    let mut module = rune::Module::default();
+
+    load_rune_async_function!(module, "get_hostname", data::hostname::hostname);
+
+    module
 }
 
 #[tokio::main]
@@ -13,8 +29,7 @@ async fn main() -> rune::Result<()> {
 
     let mut context = Context::with_default_modules()?;
 
-    let mut module = rune::Module::default();
-    module.async_function(&["get_hostname"], get_hostname)?;
+    let module = generate_module();
     context.install(&module)?;
 
     let runtime = Arc::new(context.runtime());
