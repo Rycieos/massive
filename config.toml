@@ -1,0 +1,8 @@
+theme = "default"
+
+[hostname]
+fqdn = false
+when = "always"
+
+[themes.default]
+shell_level.mark = "└"
