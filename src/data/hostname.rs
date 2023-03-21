@@ -6,7 +6,7 @@ pub async fn hostname() -> Option<String> {
     let host = match os_hostname.into_string() {
         Ok(host) => host,
         Err(bad) => {
-            log::warn!("hostname is not valid UTF!\n{:?}", bad);
+            log::warn!("hostname is not valid UTF-8!\n{:?}", bad);
             return None;
         }
     };

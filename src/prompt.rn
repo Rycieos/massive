@@ -1,5 +1,8 @@
 pub async fn generate_prompt() {
-    let prompt = get_hostname().await;
+    if false {
+        let prompt = et_hostname().await;
 
-    prompt?
+        return prompt?;
+    }
+    "foobar"
 }

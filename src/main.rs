@@ -3,6 +3,7 @@ use rune::{Context, Diagnostics, FromValue, Hash, Source, Sources, Vm};
 use std::path::Path;
 use std::sync::Arc;
 
+//mod context;
 mod data;
 
 macro_rules! load_rune_async_function {
