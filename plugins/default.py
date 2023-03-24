@@ -1,7 +1,7 @@
 def generate_prompt(context, config) -> str:
     prompt = f"[{context.username()}"
 
-    if (hostname := context.hostname()):
+    if hostname := context.hostname():
         prompt += f"@{hostname}"
 
     prompt += "]"
