@@ -3,6 +3,7 @@
 import click
 import logging
 import os
+import time
 
 from context import Context
 from config import load_config
@@ -33,31 +34,41 @@ def daemon():
 
     with open(in_fifo, "rb") as in_file:
         while True:
-            length = in_file.read(1)
-            length = int.from_bytes(length, "big")
-            data = in_file.read(length)
+            header = in_file.read(3)
+            if not header:
+                time.sleep(.001)
+                continue
 
-            if data:
-                print(data)
-                print(data.decode("utf-8"))
-                sections = data.decode("utf-8").split("\x1f")
-                print(sections)
+            # First two bytes is message length.
+            # Third byte is message type.
+            length = int.from_bytes(header[:2], "big")
+            data = in_file.read(length)
+            payload = data.decode("utf-8")
+
+            if header[2] == 1:  # hello
+                clients_cache[payload] = dict()
+                print("hello client", payload)
+
+            elif header[2] == 2:  # bye
+                clients_cache.pop(payload, None)
+                print("bye client", payload)
+
+            elif header[2] == 3:  # prompt request
+                sections = payload.split("\x1f")
 
                 client_id = sections[0]
                 resp_fifo = sections[1]
                 shell = sections[2]
                 work_dir = sections[3]
 
-                client_cache = dict()
-                clients_cache[client_id] = client_cache
-
-                context = Context(config, os.environ, global_cache, client_cache)
+                context = Context(
+                    config, os.environ, global_cache, clients_cache[client_id]
+                )
 
                 prompt = entrypoint(context, config)
-                print(prompt)
 
-                with open(resp_fifo, "wb") as out_file:
-                    out_file.write(bytes(prompt, "utf-8"))
+                with open(resp_fifo, "w") as out_file:
+                    out_file.write(prompt)
 
 
 @main.command()
