@@ -5,4 +5,5 @@ fqdn = false
 when = "always"
 
 [themes.default]
+prompt.mark = "$"
 shell_level.mark = "└"

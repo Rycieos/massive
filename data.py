@@ -2,17 +2,17 @@ from socket import getfqdn
 from typing import Dict
 
 
-def hostname(config: Dict, envs: Dict) -> str:
+def hostname(context, envs: Dict) -> str:
     hostname = getfqdn()
 
-    if not config["hostname"]["fqdn"]:
+    if not context.config["hostname"]["fqdn"]:
         hostname = hostname.split(".")[0]
 
     # TODO: handle cases where display is conditional/disabled.
     return hostname
 
 
-def username(config: Dict, envs: Dict) -> str:
+def username(context, envs: Dict) -> str:
     username = envs.get("LOGNAME")
 
     if username is None:
@@ -24,7 +24,18 @@ def username(config: Dict, envs: Dict) -> str:
     return username
 
 
+def work_dir(context, envs: Dict) -> str:
+    if not (work_dir := context.current_dir):
+        work_dir = envs.get("PWD", "")
+
+    home = envs.get("HOME")
+    if home:
+        work_dir = work_dir.replace(home, "~", 1)
+
+    return work_dir
+
+
 # TODO: how do we indicate if the data is worth showing?
-def shell_level(config: Dict, envs: Dict) -> int:
+def shell_level(context, envs: Dict) -> int:
     # TODO: handle cast/parse errors.
     return int(envs.get("SHLVL", "1"))

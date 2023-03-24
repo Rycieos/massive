@@ -1,0 +1,6 @@
+black
+click
+mypy
+ruff
+toml
+types-toml
