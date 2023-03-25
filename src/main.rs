@@ -1,36 +1,30 @@
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Context, Diagnostics, FromValue, Hash, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Hash, Source, Sources, Vm};
 use std::path::Path;
 use std::sync::Arc;
 
-//mod context;
+use context::Context;
+mod context;
 mod data;
 
-macro_rules! load_rune_async_function {
-    ($module:expr, $name:expr, $func:expr) => {{
-        match $module.async_function(&[$name], $func) {
-            Ok(()) => (),
-            // TODO: panic if allowed.
-            Err(_) => log::warn!("Failed to intitalize API function '{}'.", $name),
-        }
-    }};
-}
-
-fn generate_module() -> rune::Module {
+fn generate_module() -> Result<rune::Module, rune::compile::ContextError> {
     let mut module = rune::Module::default();
 
-    load_rune_async_function!(module, "get_hostname", data::hostname::hostname);
+    module.ty::<Context>()?;
+    module.async_inst_fn("hostname", Context::hostname)?;
 
-    module
+    //load_rune_async_function!(module, "get_hostname", data::hostname::hostname);
+
+    Ok(module)
 }
 
 #[tokio::main]
 async fn main() -> rune::Result<()> {
     let rune_entrypoint = Hash::type_hash(["generate_prompt"]);
 
-    let mut context = Context::with_default_modules()?;
+    let mut context = rune::Context::with_default_modules()?;
 
-    let module = generate_module();
+    let module = generate_module().expect("setup error");
     context.install(&module)?;
 
     let runtime = Arc::new(context.runtime());
@@ -53,7 +47,9 @@ async fn main() -> rune::Result<()> {
     let unit = result?;
     let mut vm = Vm::new(runtime, Arc::new(unit));
 
-    let output = vm.async_call(rune_entrypoint, ()).await?;
+    let output = vm
+        .async_call(rune_entrypoint, (context::Context::new("bash".into(), 30),))
+        .await?;
     let output = String::from_value(output)?;
 
     println!("{}", output);
