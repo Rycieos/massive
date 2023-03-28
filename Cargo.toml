@@ -4,9 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-cached = "0.42.0"
 gethostname = "0.4.1"
 log = "0.4.17"
+
+[dependencies.clap]
+version = "4.1.13"
+features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "wrap_help"]
 
 [dependencies.rune]
 version = "0.12.1"

@@ -6,7 +6,7 @@ function __massive_setup() {
   shopt -s checkwinsize
 
   # register client.
-  __massive_send_payload $'\x01' "$BASHPID"
+  printf '\x01%s' >"$req_fifo" "$BASHPID"
 
   if [[ ! -p $resp_fifo ]]; then
     [[ -r $resp_fifo ]] && rm $resp_fifo
@@ -17,7 +17,7 @@ function __massive_setup() {
 }
 
 function __massive_bye() {
-  __massive_send_payload $'\x02' "$BASHPID"
+  printf '\x02%s' >"$req_fifo" "$BASHPID"
 }
 
 function __massive_set_prompt() {
@@ -41,23 +41,12 @@ function __massive_set_prompt() {
 
   local sep=$'\x1f'
 
-  __massive_send_payload $'\x03' "${BASHPID}${sep}${resp_fifo}${sep}bash${sep}${COLUMNS-}${sep}${exit_status}${sep}${pipe_status}${sep}${jobs_running}${sep}${jobs_sleeping}${sep}${PWD-}${sep}${env_vars}"
+  # Open for read as well as write so the write doesn't block.
+  # https://unix.stackexchange.com/a/522940/421569
+  builtin printf '\x03%s' 1<>"$req_fifo" >"$req_fifo" "${BASHPID}${sep}${resp_fifo}${sep}bash${sep}${COLUMNS-}${sep}${exit_status}${sep}${pipe_status}${sep}${jobs_running}${sep}${jobs_sleeping}${sep}${PWD-}${sep}${env_vars}"
 
-  #printf '%s\n' "$(<"$resp_fifo")"
-  PS1="$(<"$resp_fifo")"
-}
-
-function __massive_send_payload() { # type, payload
-  local payload_len payload_len_hex_big payload_len_hex_small
-
-  printf -v _ '%s%n' "$2" payload_len
-  # split into two bytes.
-  local big=$((payload_len >> 8))
-  local small=$((payload_len % 256))
-  printf -v payload_len_hex_big '%x' "$big"
-  printf -v payload_len_hex_small '%x' "$small"
-
-  printf "\\x${payload_len_hex_big}\\x${payload_len_hex_small}%s%s" "$1" "$2" >"$req_fifo"
+  # TODO: find a way to timeout this command.
+  read -r PS1 <"$resp_fifo"
 }
 
 #__massive_setup

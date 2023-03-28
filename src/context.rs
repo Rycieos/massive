@@ -13,7 +13,7 @@ pub struct Context {
     jobs_running: u16,
     jobs_sleeping: u16,
     current_dir: String,
-    envs: HashMap<String, String>,
+    pub envs: HashMap<String, String>,
 }
 
 macro_rules! with_cache {
@@ -29,27 +29,79 @@ macro_rules! with_cache {
 }
 
 impl Context {
-    pub fn new(shell: String, width: u16) -> Self {
+    pub fn new(
+        shell: String,
+        width: u16,
+        exit_status: i32,
+        pipe_status: Vec<i32>,
+        jobs_running: u16,
+        jobs_sleeping: u16,
+        current_dir: String,
+        envs: HashMap<String, String>,
+    ) -> Self {
         Context {
+            // TODO: actual caching.
             global: HashMap::new(),
             client: HashMap::new(),
             instance: HashMap::new(),
             shell,
             width,
-            exit_status: 0,
-            pipe_status: vec![0],
-            jobs_running: 0,
-            jobs_sleeping: 0,
-            current_dir: "".to_string(),
-            envs: HashMap::new(),
+            exit_status,
+            pipe_status,
+            jobs_running,
+            jobs_sleeping,
+            current_dir,
+            envs,
         }
     }
 
     pub async fn hostname(&mut self) -> &str {
         with_cache!(
-            self.instance,
+            self.global,
             "hostname",
             crate::data::hostname::hostname(self).await
         );
     }
+
+    pub async fn username(&mut self) -> &str {
+        with_cache!(
+            self.global,
+            "username",
+            crate::data::username::username(self).await
+        );
+    }
+}
+
+pub fn split_env_vars(shell: &str, payload: &str) -> HashMap<String, String> {
+    if shell == "bash" {
+        return split_bash_vars(payload);
+    }
+
+    HashMap::new()
+}
+
+fn split_bash_vars(payload: &str) -> HashMap<String, String> {
+    let mut env_vars = HashMap::new();
+
+    for var in payload.split("declare -x ") {
+        if var.len() > 0 {
+            match var.split_once("=\"") {
+                Some((key, value)) => {
+                    let value = match value.strip_suffix('\n') {
+                        Some(stripped) => stripped,
+                        None => value,
+                    };
+                    let value = match value.strip_suffix('"') {
+                        Some(stripped) => stripped,
+                        None => value,
+                    };
+                    let value = value.replace("\\\"", "\"");
+                    env_vars.insert(key.to_string(), value);
+                }
+                None => continue,
+            }
+        }
+    }
+
+    env_vars
 }
