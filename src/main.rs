@@ -164,10 +164,20 @@ async fn main() -> rune::Result<()> {
             let unit = result?;
             let mut vm = Vm::new(runtime, Arc::new(unit));
 
-            //let output = vm.async_call(rune_entrypoint, (context::Context::new("bash".into(), 30),)).await?;
-            //let output = String::from_value(output)?;
+            let context = context::Context::new(
+                "bash".into(),
+                30,
+                0,
+                vec![0],
+                0,
+                0,
+                "".into(),
+                std::env::vars().collect::<std::collections::HashMap<String, String>>(),
+            );
+            let output = vm.async_call(rune_entrypoint, (context,)).await?;
+            let output = String::from_value(output)?;
 
-            //println!("{}", output);
+            println!("{}", output);
         }
     };
     Ok(())

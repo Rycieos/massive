@@ -1,19 +1,15 @@
-//use std::future;
+use std::future;
 
 pub async fn generate_prompt(context) {
-    let username = context.username().await;
-    let hostname = context.hostname().await;
+    let results = future::join([
+        { async || ("hostname", context.hostname().await) }(),
+        { async || ("username", context.username().await) }(),
+    ]).await;
 
-    `[${username}@${hostname}] \$ `
+    let data = #{};
+    for result in results {
+        data[result.0] = result.1;
+    }
 
-    //let result = future::join([
-    //    context.hostname(),
-    //    context.username(),
-    //]).await;
-
-    //match result {
-    //    Some((hostname, username)) => {
-    //        `[${username}@${hostname}] \$ `
-    //    }
-    //}
+    `[${data.username}@${data.hostname}] \$ `
 }
