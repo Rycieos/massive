@@ -1,12 +1,27 @@
 use std::collections::HashMap;
 use std::vec::Vec;
 
+#[derive(Debug)]
+pub enum Shell {
+    Bash,
+    Unknown,
+}
+
+impl Shell {
+    pub fn from_str(from: &str) -> Self {
+        match from {
+            "bash" => Self::Bash,
+            _ => Self::Unknown,
+        }
+    }
+}
+
 #[derive(Debug, rune::Any)]
 pub struct Context {
     global: HashMap<&'static str, String>,
     client: HashMap<&'static str, String>,
     instance: HashMap<&'static str, String>,
-    shell: String,
+    shell: Shell,
     width: u16,
     exit_status: i32,
     pipe_status: Vec<i32>,
@@ -30,7 +45,7 @@ macro_rules! with_cache {
 
 impl Context {
     pub fn new(
-        shell: String,
+        shell: Shell,
         width: u16,
         exit_status: i32,
         pipe_status: Vec<i32>,
@@ -70,38 +85,4 @@ impl Context {
             crate::data::username::username(self).await
         );
     }
-}
-
-pub fn split_env_vars(shell: &str, payload: &str) -> HashMap<String, String> {
-    if shell == "bash" {
-        return split_bash_vars(payload);
-    }
-
-    HashMap::new()
-}
-
-fn split_bash_vars(payload: &str) -> HashMap<String, String> {
-    let mut env_vars = HashMap::new();
-
-    for var in payload.split("declare -x ") {
-        if var.len() > 0 {
-            match var.split_once("=\"") {
-                Some((key, value)) => {
-                    let value = match value.strip_suffix('\n') {
-                        Some(stripped) => stripped,
-                        None => value,
-                    };
-                    let value = match value.strip_suffix('"') {
-                        Some(stripped) => stripped,
-                        None => value,
-                    };
-                    let value = value.replace("\\\"", "\"");
-                    env_vars.insert(key.to_string(), value);
-                }
-                None => continue,
-            }
-        }
-    }
-
-    env_vars
 }
