@@ -50,8 +50,7 @@ pub async fn server() -> rune::Result<()> {
                     sections[6],
                     sections[7],
                     sections[8],
-                    None,
-                    Some(sections[9]),
+                    sections[9],
                 ) else {
                     log::error!("failed to parse message into context");
                     continue;

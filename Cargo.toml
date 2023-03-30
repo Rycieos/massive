@@ -9,7 +9,7 @@ log = "0.4.17"
 
 [dependencies.clap]
 version = "4.2.1"
-features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "wrap_help"]
+features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "wrap_help", "env"]
 
 [dependencies.rune]
 version = "0.12.3"

@@ -10,8 +10,7 @@ pub fn parse_prompt_request(
     jobs_running: &str,
     jobs_sleeping: &str,
     current_dir: &str,
-    env_vars_map: Option<HashMap<String, String>>,
-    env_vars_str: Option<&str>,
+    env_vars_str: &str,
 ) -> rune::Result<Context> {
     let shell: Shell = Shell::from_str(shell);
 
@@ -20,13 +19,7 @@ pub fn parse_prompt_request(
         pipe_statuses.push(status.parse::<i32>()?);
     }
 
-    let env_vars = match env_vars_map {
-        Some(map) => map,
-        None => match env_vars_str {
-            Some(vars) => split_env_vars(&shell, vars),
-            None => HashMap::new(),
-        },
-    };
+    let env_vars = split_env_vars(&shell, env_vars_str);
 
     let context = Context::new(
         shell,

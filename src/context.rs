@@ -1,15 +1,20 @@
 use std::collections::HashMap;
 use std::vec::Vec;
 
-#[derive(Debug)]
+#[derive(clap::ValueEnum, Clone, Debug)]
 pub enum Shell {
     Bash,
     Unknown,
 }
 
 impl Shell {
-    pub fn from_str(from: &str) -> Self {
-        match from {
+    pub fn from_str(input: &str) -> Self {
+        let input = match input.rsplit_once('/') {
+            Some((_, end)) => end,
+            None => input,
+        };
+
+        match input.to_lowercase().as_ref() {
             "bash" => Self::Bash,
             _ => Self::Unknown,
         }
