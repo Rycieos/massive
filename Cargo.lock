@@ -353,6 +353,7 @@ dependencies = [
  "clap",
  "gethostname",
  "log",
+ "pidlock",
  "rune",
  "tokio",
 ]
@@ -460,6 +461,16 @@ name = "once_cell"
 version = "1.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
+
+[[package]]
+name = "pidlock"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9803429506fea3b35e5febd46e954169dd2704c19b81605a3e4c54b84ea8dbe6"
+dependencies = [
+ "libc",
+ "log",
+]
 
 [[package]]
 name = "pin-project"

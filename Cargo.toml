@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 gethostname = "0.4.1"
 log = "0.4.17"
+pidlock = "0.1.4"
 
 [dependencies.clap]
 version = "4.2.1"

@@ -1,12 +1,16 @@
 use std::fs;
 use std::path::Path;
 
+use pidlock::Pidlock;
 use rune::FromValue;
 
 use crate::prompt_request::parse_prompt_request;
 use crate::vm::vm_from_sources;
 
 pub async fn server() -> rune::Result<()> {
+    let mut lock = Pidlock::new("/home/mark/.config/massive/server/pid.lock");
+    lock.acquire().expect("Failed to acquire lock, exiting!");
+
     let rune_entrypoint = rune::Hash::type_hash(["generate_prompt"]);
     let mut vm = vm_from_sources(Path::new("src/prompt.rn"))?;
 
@@ -28,7 +32,7 @@ pub async fn server() -> rune::Result<()> {
             }
             2 => {
                 // bye
-                return Ok(());
+                break;
             }
             3 => {
                 // prompt request
@@ -70,5 +74,8 @@ pub async fn server() -> rune::Result<()> {
                 log::error!("message type is invalid");
             }
         };
-    }
+    };
+
+    lock.release().expect("Failed to release lock");
+    Ok(())
 }
