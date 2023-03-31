@@ -11,5 +11,5 @@ pub async fn generate_prompt(context) {
         data[result.0] = result.1;
     }
 
-    `[${data.username}@${data.hostname}] \$ `
+    `${context.shell().to_string()} [${data.username}@${data.hostname}] \$ `
 }

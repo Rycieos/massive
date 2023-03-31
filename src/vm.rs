@@ -4,7 +4,7 @@ use std::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Source, Sources, Vm};
 
-use crate::context::Context;
+use crate::context::{Context, Shell};
 
 pub fn vm_from_sources(path: &Path) -> Result<Vm, rune::Error> {
     // TODO: have a debug version of this with println included.
@@ -40,7 +40,11 @@ fn generate_module() -> Result<rune::Module, rune::compile::ContextError> {
 
     module.ty::<Context>()?;
     module.async_inst_fn("hostname", Context::hostname)?;
+    module.inst_fn("shell", Context::shell)?;
     module.async_inst_fn("username", Context::username)?;
+
+    module.ty::<Shell>()?;
+    module.inst_fn("to_string", Shell::to_string)?;
 
     Ok(module)
 }

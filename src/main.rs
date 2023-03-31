@@ -4,8 +4,8 @@ use std::path::Path;
 use clap::Parser;
 use rune::{FromValue, Hash};
 
-use context::{Context, Shell};
-use vm::vm_from_sources;
+use crate::context::{Context, Shell};
+use crate::vm::vm_from_sources;
 
 mod context;
 mod data;

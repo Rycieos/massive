@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::vec::Vec;
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(clap::ValueEnum, Clone, Copy, Debug, PartialEq, Eq, rune::Any)]
 pub enum Shell {
     Bash,
     Unknown,
@@ -17,6 +18,15 @@ impl Shell {
         match input.to_lowercase().as_ref() {
             "bash" => Self::Bash,
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl fmt::Display for Shell {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Shell::Bash => write!(f, "bash"),
+            Shell::Unknown => write!(f, "unknown"),
         }
     }
 }
@@ -81,6 +91,10 @@ impl Context {
             "hostname",
             crate::data::hostname::hostname(self).await
         );
+    }
+
+    pub fn shell(&self) -> Shell {
+        self.shell
     }
 
     pub async fn username(&mut self) -> &str {
