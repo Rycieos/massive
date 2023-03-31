@@ -1,15 +1,10 @@
 use std::future;
 
 pub async fn generate_prompt(context) {
-    let results = future::join([
-        { async || ("hostname", context.hostname().await) }(),
-        { async || ("username", context.username().await) }(),
+    let [hostname, username] = future::join([
+        context.hostname(),
+        context.username(),
     ]).await;
 
-    let data = #{};
-    for result in results {
-        data[result.0] = result.1;
-    }
-
-    `${context.shell().to_string()} [${data.username}@${data.hostname}] \$ `
+    `${context.shell().to_string()} [${username}@${hostname}] \$ `
 }

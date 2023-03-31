@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::RwLock;
 use std::vec::Vec;
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, PartialEq, Eq, rune::Any)]
@@ -33,9 +34,9 @@ impl fmt::Display for Shell {
 
 #[derive(Debug, rune::Any)]
 pub struct Context {
-    global: HashMap<&'static str, String>,
-    client: HashMap<&'static str, String>,
-    instance: HashMap<&'static str, String>,
+    global: RwLock<HashMap<&'static str, String>>,
+    client: RwLock<HashMap<&'static str, String>>,
+    instance: RwLock<HashMap<&'static str, String>>,
     shell: Shell,
     width: u16,
     exit_status: i32,
@@ -48,13 +49,18 @@ pub struct Context {
 
 macro_rules! with_cache {
     ($cache:expr, $key:expr, $func:expr) => {
-        if $cache.contains_key($key) {
-            return $cache.get($key).unwrap();
+        let map = $cache.read().unwrap();
+        if map.contains_key($key) {
+            return map.get($key).unwrap().clone();
         }
+        drop(map);
 
         let value = $func;
-        $cache.insert($key, value);
-        return $cache.get($key).unwrap();
+
+        let mut map = $cache.write().unwrap();
+        map.insert($key, value.clone());
+
+        return value;
     };
 }
 
@@ -71,9 +77,9 @@ impl Context {
     ) -> Self {
         Context {
             // TODO: actual caching.
-            global: HashMap::new(),
-            client: HashMap::new(),
-            instance: HashMap::new(),
+            global: RwLock::new(HashMap::new()),
+            client: RwLock::new(HashMap::new()),
+            instance: RwLock::new(HashMap::new()),
             shell,
             width,
             exit_status,
@@ -85,7 +91,7 @@ impl Context {
         }
     }
 
-    pub async fn hostname(&mut self) -> &str {
+    pub async fn hostname(&self) -> String {
         with_cache!(
             self.global,
             "hostname",
@@ -97,7 +103,7 @@ impl Context {
         self.shell
     }
 
-    pub async fn username(&mut self) -> &str {
+    pub async fn username(&self) -> String {
         with_cache!(
             self.global,
             "username",
