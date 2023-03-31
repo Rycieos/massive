@@ -4,6 +4,7 @@ use std::path::Path;
 use pidlock::Pidlock;
 use rune::FromValue;
 
+use crate::filesystem::get_or_create_in_fifo;
 use crate::prompt_request::parse_prompt_request;
 use crate::vm::vm_from_sources;
 
@@ -14,8 +15,10 @@ pub async fn server() -> rune::Result<()> {
     let rune_entrypoint = rune::Hash::type_hash(["generate_prompt"]);
     let mut vm = vm_from_sources(Path::new("src/prompt.rn"))?;
 
+    let in_fifo = get_or_create_in_fifo();
+
     loop {
-        let Ok(bytes) = fs::read("/tmp/massive_in.fifo") else {
+        let Ok(bytes) = fs::read(&in_fifo) else {
             log::error!("failed to read from input FIFO");
             continue;
         };
@@ -74,7 +77,7 @@ pub async fn server() -> rune::Result<()> {
                 log::error!("message type is invalid");
             }
         };
-    };
+    }
 
     lock.release().expect("Failed to release lock");
     Ok(())

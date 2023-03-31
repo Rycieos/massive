@@ -7,10 +7,15 @@ edition = "2021"
 gethostname = "0.4.1"
 log = "0.4.17"
 pidlock = "0.1.4"
+directories = "5.0.0"
 
 [dependencies.clap]
 version = "4.2.1"
 features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "wrap_help", "env"]
+
+[dependencies.nix]
+version = "^0.26"
+features = ["fs", "hostname", "term", "user"]
 
 [dependencies.rune]
 version = "0.12.3"

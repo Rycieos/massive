@@ -1,4 +1,4 @@
-req_fifo=/tmp/massive_in.fifo
+req_fifo=~/.local/state/massive/server_in.fifo
 resp_fifo=/tmp/massive_out.fifo
 
 function __massive_setup() {

@@ -9,6 +9,7 @@ use crate::vm::vm_from_sources;
 
 mod context;
 mod data;
+mod filesystem;
 mod prompt_request;
 mod server;
 mod vm;
@@ -29,13 +30,13 @@ enum Command {
     Server,
     Prompt {
         // TODO: the env var is not parsed correctly.
-        #[arg(long, value_enum, env="SHELL")]
+        #[arg(long, value_enum, env = "SHELL")]
         shell: Shell,
         #[arg(long)]
         terminal_width: Option<u16>,
         #[arg(long)]
         exit_status: Option<i32>,
-        #[arg(long, value_delimiter=' ')]
+        #[arg(long, value_delimiter = ' ')]
         pipe_status: Vec<i32>,
         #[arg(long)]
         jobs_running: Option<u16>,
@@ -82,7 +83,11 @@ async fn main() -> rune::Result<()> {
                 jobs_running.unwrap_or(0),
                 jobs_sleeping.unwrap_or(0),
                 current_dir.unwrap_or_else(|| {
-                    std::env::current_dir().unwrap().into_os_string().into_string().unwrap()
+                    std::env::current_dir()
+                        .unwrap()
+                        .into_os_string()
+                        .into_string()
+                        .unwrap()
                 }),
                 env_vars,
             );
