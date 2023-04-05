@@ -8,14 +8,19 @@ use crate::filesystem::get_or_create_in_fifo;
 use crate::prompt_request::parse_prompt_request;
 use crate::vm::vm_from_sources;
 
-pub async fn server() -> rune::Result<()> {
-    let mut lock = Pidlock::new("/home/mark/.config/most/server/pid.lock");
-    lock.acquire().expect("Failed to acquire lock, exiting!");
+pub async fn server(debug: bool) -> rune::Result<()> {
+    let lock = if ! debug {
+        let mut inner_lock = Pidlock::new("/home/mark/.config/most/server/pid.lock");
+        inner_lock.acquire().expect("Failed to acquire lock, exiting!");
+        Some(inner_lock)
+    } else {
+        None
+    };
 
     let rune_entrypoint = rune::Hash::type_hash(["generate_prompt"]);
     let mut vm = vm_from_sources(Path::new("src/prompt.rn"))?;
 
-    let in_fifo = get_or_create_in_fifo();
+    let in_fifo = get_or_create_in_fifo(debug);
 
     loop {
         let Ok(bytes) = fs::read(&in_fifo) else {
@@ -79,6 +84,11 @@ pub async fn server() -> rune::Result<()> {
         };
     }
 
-    lock.release().expect("Failed to release lock");
+    std::fs::remove_file(&in_fifo).expect("Failed to delete in FIFO");
+
+    if lock.is_some() {
+        lock.unwrap().release().expect("Failed to release lock");
+    }
+
     Ok(())
 }

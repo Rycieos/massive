@@ -28,7 +28,10 @@ enum Command {
         #[arg(value_enum)]
         shell: Shell,
     },
-    Server,
+    Server {
+        #[arg(long)]
+        debug: bool,
+    },
     Prompt {
         // TODO: the env var is not parsed correctly.
         #[arg(long, value_enum, env = "SHELL")]
@@ -57,8 +60,10 @@ async fn main() -> rune::Result<()> {
         Command::Init { shell } => {
             println!("{:?}", shell);
         }
-        Command::Server => {
-            server::server().await?;
+        Command::Server {
+            debug,
+        } => {
+            server::server(debug).await?;
         }
         Command::Prompt {
             shell,

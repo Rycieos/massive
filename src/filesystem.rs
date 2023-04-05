@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process;
 
 use directories::BaseDirs;
 use nix::sys::stat::Mode;
@@ -50,15 +51,22 @@ pub fn get_state_dir() -> Option<PathBuf> {
     }
 }
 
-fn get_in_fifo() -> Option<PathBuf> {
+fn get_in_fifo(debug: bool) -> Option<PathBuf> {
+    let filename;
+    if debug {
+        filename = process::id().to_string() + "_in.fifo";
+    } else {
+        filename = "server_in.fifo".to_string();
+    }
+
     get_state_dir().map(|mut dir| {
-        dir.push("server_in.fifo");
+        dir.push(filename);
         dir
     })
 }
 
-pub fn get_or_create_in_fifo() -> PathBuf {
-    let in_fifo = get_in_fifo().expect("Can't find input FIFO location");
+pub fn get_or_create_in_fifo(debug: bool) -> PathBuf {
+    let in_fifo = get_in_fifo(debug).expect("Can't find input FIFO location");
     log::debug!("in_fifo: {:?}", in_fifo);
 
     if !in_fifo.exists() {
