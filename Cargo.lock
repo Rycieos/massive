@@ -357,19 +357,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "massive"
-version = "0.1.0"
-dependencies = [
- "clap",
- "directories",
- "log",
- "nix",
- "pidlock",
- "rune",
- "tokio",
-]
-
-[[package]]
 name = "memoffset"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -388,6 +375,19 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys",
+]
+
+[[package]]
+name = "most"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "directories",
+ "log",
+ "nix",
+ "pidlock",
+ "rune",
+ "tokio",
 ]
 
 [[package]]

@@ -11,22 +11,22 @@ pub fn get_home_dir() -> Option<PathBuf> {
 }
 
 pub fn get_config_path() -> Option<PathBuf> {
-    if let Ok(path) = env::var("MASSIVE_CONFIG") {
-        log::debug!("MASSIVE_CONFIG is set: {}", &path);
+    if let Ok(path) = env::var("MOST_CONFIG") {
+        log::debug!("MOST_CONFIG is set: {}", &path);
         Some(PathBuf::from(path))
     } else {
         BaseDirs::new()
             .map(|bd| bd.config_dir().to_owned())
             .map(|mut home| {
-                home.push(Path::new("massive/config.toml"));
+                home.push(Path::new("most/config.toml"));
                 home
             })
     }
 }
 
 pub fn get_state_dir() -> Option<PathBuf> {
-    if let Ok(path) = env::var("MASSIVE_STATE_DIR") {
-        log::debug!("MASSIVE_STATE_DIR is set: {}", &path);
+    if let Ok(path) = env::var("MOST_STATE_DIR") {
+        log::debug!("MOST_STATE_DIR is set: {}", &path);
         Some(PathBuf::from(path))
     } else {
         let state_dir: Option<PathBuf> =
@@ -34,7 +34,7 @@ pub fn get_state_dir() -> Option<PathBuf> {
 
         match state_dir {
             Some(mut dir) => {
-                dir.push("massive");
+                dir.push("most");
                 Some(dir)
             }
             None => {

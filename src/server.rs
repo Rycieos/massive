@@ -9,7 +9,7 @@ use crate::prompt_request::parse_prompt_request;
 use crate::vm::vm_from_sources;
 
 pub async fn server() -> rune::Result<()> {
-    let mut lock = Pidlock::new("/home/mark/.config/massive/server/pid.lock");
+    let mut lock = Pidlock::new("/home/mark/.config/most/server/pid.lock");
     lock.acquire().expect("Failed to acquire lock, exiting!");
 
     let rune_entrypoint = rune::Hash::type_hash(["generate_prompt"]);

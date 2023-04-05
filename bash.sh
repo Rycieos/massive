@@ -1,7 +1,7 @@
-req_fifo=~/.local/state/massive/server_in.fifo
-resp_fifo=/tmp/massive_out.fifo
+req_fifo=~/.local/state/most/server_in.fifo
+resp_fifo=/tmp/most_out.fifo
 
-function __massive_setup() {
+function __most_setup() {
   # Ensure that $COLUMNS gets set
   shopt -s checkwinsize
 
@@ -13,14 +13,14 @@ function __massive_setup() {
     mkfifo "$resp_fifo"
   fi
 
-  PROMPT_COMMAND=__massive_set_prompt
+  PROMPT_COMMAND=__most_set_prompt
 }
 
-function __massive_bye() {
+function __most_bye() {
   printf '\x02%s' >"$req_fifo" "$BASHPID"
 }
 
-function __massive_set_prompt() {
+function __most_set_prompt() {
   # This line MUST be first.
   local exit_status="$?" pipe_status="${PIPESTATUS[*]}"
 
@@ -49,4 +49,4 @@ function __massive_set_prompt() {
   read -r PS1 <"$resp_fifo"
 }
 
-#__massive_setup
+#__most_setup
