@@ -10,6 +10,7 @@ use crate::vm::vm_from_sources;
 mod context;
 mod data;
 mod filesystem;
+mod logger;
 mod prompt_request;
 mod server;
 mod vm;
@@ -49,6 +50,7 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> rune::Result<()> {
+    logger::init().expect("logger error");
     let args = Cli::parse();
 
     match args.command {
